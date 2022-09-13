@@ -39,21 +39,21 @@ class BlogController extends AbstractController
     }
 
     #[Route('/{id}', name: "blog_by_id", requirements: ['id' => '\d+'], methods: ["GET"])]
-    public function post(int $id): Response
+    public function post(BlogPost $post): Response
     {
-        $post = $this->doctrine->getRepository(BlogPost::class)->find($id);
-
-        if (!$post) {
-            throw $this->createNotFoundException(
-                'No post found for id '.$id
-            );
-        }
-        return $this->jsonResponseFactory->create($post);
-        //return $this->json($post);
+//        $post = $this->doctrine->getRepository(BlogPost::class)->find($id);
+//
+//        if (!$post) {
+//            throw $this->createNotFoundException(
+//                'No post found for id '.$id
+//            );
+//        }
+        //return $this->jsonResponseFactory->create($post);
+        return $this->json($post);
     }
 
     #[Route('/{slug}', name: "blog_by_slug", methods: ["GET"])]
-    public function postBySlug($slug): JsonResponse
+    public function postBySlug($slug): Response
     {
         $post = $this->doctrine->getRepository(BlogPost::class)->findOneBy(['slug' => $slug]);
         if (!$post) {
@@ -61,16 +61,26 @@ class BlogController extends AbstractController
                 'No post found for slug '.$slug
             );
         }
-        return $this->json($post);
+        //return $this->json($post);
+        return $this->jsonResponseFactory->create($post);
     }
 
     #[Route('/add', name: "blog_add", methods: ["POST"])]
-    public function add(SerializerInterface $serializer, Request $request, ManagerRegistry $doctrine): JsonResponse
+    public function add(SerializerInterface $serializer, Request $request): JsonResponse
     {
-        $em = $doctrine->getManager();
+        $em = $this->doctrine->getManager();
         $blogPost = $serializer->deserialize($request->getContent(), BlogPost::class, 'json');
         $em->persist($blogPost);
         $em->flush();
         return $this->json($blogPost);
+    }
+
+    #[Route('/post/{id}', name: "blog_delete", methods: ["DELETE"])]
+    public function delete(BlogPost $post): JsonResponse
+    {
+        $em = $this->doctrine->getManager();
+        $em->remove($post);
+        $em->flush();
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }
