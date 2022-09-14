@@ -4,7 +4,10 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JetBrains\PhpStorm\Pure;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ApiResource]
@@ -26,6 +29,18 @@ class User
 
     #[ORM\Column(length: 255)]
     private ?string $email = null;
+
+    #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
+    private Collection $posts;
+
+    #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
+    private Collection $comments;
+
+    #[Pure] public function __construct()
+    {
+        $this->posts = new ArrayCollection();
+        $this->comments = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -78,5 +93,15 @@ class User
         $this->email = $email;
 
         return $this;
+    }
+
+    public function getPosts(): Collection
+    {
+        return $this->posts;
+    }
+
+    public function getComments(): Collection
+    {
+        return $this->comments;
     }
 }
