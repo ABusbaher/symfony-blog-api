@@ -4,12 +4,14 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\BlogPostRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use JetBrains\PhpStorm\Pure;
 
 #[ORM\Entity(repositoryClass: BlogPostRepository::class)]
 #[ApiResource]
-
 class BlogPost
 {
     #[ORM\Id]
@@ -26,11 +28,19 @@ class BlogPost
     #[ORM\Column(type: Types::TEXT)]
     private ?string $content = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'blog_post')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'posts')]
     private ?User $author;
+
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Comment::class)]
+    private Collection $comments;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $slug;
+
+    #[Pure] public function __construct()
+    {
+        $this->comments = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -82,6 +92,11 @@ class BlogPost
     {
         $this->author = $author;
         return $this;
+    }
+
+    public function getComments(): Collection
+    {
+        return $this->comments;
     }
 
     public function getSlug(): ?string

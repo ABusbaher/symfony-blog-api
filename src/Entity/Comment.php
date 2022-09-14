@@ -22,6 +22,9 @@ class Comment
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'comments')]
     private ?User $author;
 
+    #[ORM\ManyToOne(targetEntity: BlogPost::class, inversedBy: 'comments')]
+    private ?BlogPost $post;
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $published = null;
 
@@ -62,6 +65,17 @@ class Comment
     public function setAuthor(?User $author): self
     {
         $this->author = $author;
+        return $this;
+    }
+
+    public function getBlogPost(): ?BlogPost
+    {
+        return $this->post;
+    }
+
+    public function setBlogPost(?BlogPost $post): self
+    {
+        $this->post = $post;
         return $this;
     }
 }
