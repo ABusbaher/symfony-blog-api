@@ -9,11 +9,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JetBrains\PhpStorm\Pure;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BlogPostRepository::class)]
 #[ApiResource(
-    collectionOperations: ['get'],
-    itemOperations: ['get']
+    collectionOperations: ['get', 'post' => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')"]],
+    itemOperations: ['get', 'put' => ["security" =>
+        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]]
 )]
 class BlogPost
 {
@@ -23,12 +25,18 @@ class BlogPost
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotBlank]
+    #[Assert\Type("\DateTimeInterface")]
     private ?\DateTimeInterface $published = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5)]
     private ?string $content = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'posts')]
@@ -38,6 +46,7 @@ class BlogPost
     private Collection $comments;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank]
     private ?string $slug;
 
     #[Pure] public function __construct()

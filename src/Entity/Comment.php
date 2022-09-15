@@ -9,8 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
 #[ApiResource(
-    collectionOperations: ['get'],
-    itemOperations: ['get']
+    collectionOperations: ['get', 'post' => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')"]],
+    itemOperations: ['get', 'put' => ["security" =>
+        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]]
 )]
 class Comment
 {

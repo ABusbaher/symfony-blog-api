@@ -16,9 +16,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ApiResource(
-    collectionOperations: ['post'],
-    itemOperations: ['get'],
-    normalizationContext: ['groups' => ['read']]
+    collectionOperations:
+        ['post' => ['denormalization_context' => ['groups' => ['post']]]
+    ],
+    itemOperations: [
+        'get' => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')",
+            'normalization_context' => ['groups' => ['get']]
+        ],
+        'put' => ["security" => "is_granted('IS_AUTHENTICATED_FULLY') and object == user",
+            'denormalization_context' => ['groups' => ['put']],
+            'normalization_context' => ['groups' => ['get']]
+        ]
+    ],
+//    denormalizationContext: ['groups' => ['put']],
+//    normalizationContext: ['groups' => ['get']],
 )]
 #[UniqueEntity("email",
     message: "Email already in use")]
@@ -29,16 +40,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['read'])]
+    #[Groups(['get'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read'])]
+    #[Groups(['get', 'post'])]
     #[Assert\NotBlank]
     #[Assert\Length(min: 3, max: 255)]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['put', 'post'])]
     #[Assert\NotBlank]
     #[Assert\Regex(
         pattern: "/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/",
@@ -46,6 +58,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private ?string $password = null;
 
+    #[Groups(['put', 'post'])]
     #[Assert\NotBlank]
     #[Assert\Expression(
         "this.getPassword() === this.getRetypedPassword()",
@@ -54,23 +67,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $retypedPassword = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['read'])]
+    #[Groups(['get', 'post', 'put'])]
     #[Assert\NotBlank]
     #[Assert\Length(min: 3, max: 255)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['post'])]
     #[Assert\NotBlank]
     #[Assert\Email]
     #[Assert\Length(min: 5, max: 255)]
     private ?string $email = null;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
-    #[Groups(['read'])]
+    #[Groups(['get'])]
     private Collection $posts;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
-    #[Groups(['read'])]
+    #[Groups(['get'])]
     private Collection $comments;
 
     #[Pure] public function __construct()
@@ -159,7 +173,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return null;
     }
 
-    #[Pure] public function getUserIdentifier(): string
+    public function getUserIdentifier(): string
     {
         return $this->getEmail();
     }
