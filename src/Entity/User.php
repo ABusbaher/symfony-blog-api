@@ -20,10 +20,10 @@ use Symfony\Component\Validator\Constraints as Assert;
     itemOperations: ['get'],
     normalizationContext: ['groups' => ['read']]
 )]
-#[UniqueEntity("username",
-    message: "Username already in use")]
 #[UniqueEntity("email",
     message: "Email already in use")]
+#[UniqueEntity("username",
+    message: "Username already in use")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -49,7 +49,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank]
     #[Assert\Expression(
         "this.getPassword() === this.getRetypedPassword()",
-        message: "Passwords does not match"
+        message: "Passwords do not match"
     )]
     private ?string $retypedPassword = null;
 
