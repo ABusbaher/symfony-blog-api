@@ -8,34 +8,69 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JetBrains\PhpStorm\Pure;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    collectionOperations: ['post'],
+    itemOperations: ['get'],
+    normalizationContext: ['groups' => ['read']]
+)]
+#[UniqueEntity("username",
+    message: "Username already in use")]
+#[UniqueEntity("email",
+    message: "Email already in use")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['read'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 3, max: 255)]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Regex(
+        pattern: "/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/",
+        message: "Password must contain at least 6 characters with at least one number, one capital letter and one small letter"
+    )]
     private ?string $password = null;
 
+    #[Assert\NotBlank]
+    #[Assert\Expression(
+        "this.getPassword() === this.getRetypedPassword()",
+        message: "Passwords does not match"
+    )]
+    private ?string $retypedPassword = null;
+
     #[ORM\Column(length: 255)]
+    #[Groups(['read'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 3, max: 255)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
+    #[Assert\Length(min: 5, max: 255)]
     private ?string $email = null;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
+    #[Groups(['read'])]
     private Collection $posts;
 
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: BlogPost::class)]
+    #[Groups(['read'])]
     private Collection $comments;
 
     #[Pure] public function __construct()
@@ -57,7 +92,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUsername(string $username): self
     {
         $this->username = $username;
-
         return $this;
     }
 
@@ -69,7 +103,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
+        return $this;
+    }
 
+    public function getRetypedPassword(): ?string
+    {
+        return $this->retypedPassword;
+    }
+
+    public function setRetypedPassword(?string $retypedPassword): self
+    {
+        $this->retypedPassword = $retypedPassword;
         return $this;
     }
 
@@ -81,7 +125,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setName(string $name): self
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -93,7 +136,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
         return $this;
     }
 
