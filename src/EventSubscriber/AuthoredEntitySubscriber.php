@@ -3,6 +3,7 @@
 namespace App\EventSubscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
+use App\Entity\AuthoredEntityInterface;
 use App\Entity\BlogPost;
 use App\Entity\Comment;
 use App\Entity\User;
@@ -29,9 +30,14 @@ class AuthoredEntitySubscriber implements EventSubscriberInterface
     {
         $entity = $event->getControllerResult();
         $method = $event->getRequest()->getMethod();
+
+        $token = $this->tokenStorage->getToken();
+        if (null === $token) {
+            return;
+        }
         /** @var User $author */
-        $author = $this->tokenStorage->getToken()->getUser();
-        if ((!$entity instanceof BlogPost && !$entity instanceof Comment) || Request::METHOD_POST !== $method) {
+        $author = $token->getUser();
+        if (!$entity instanceof AuthoredEntityInterface || Request::METHOD_POST !== $method) {
             return;
         }
         $entity->setAuthor($author);

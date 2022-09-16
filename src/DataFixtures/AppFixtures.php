@@ -14,6 +14,29 @@ class AppFixtures extends Fixture
 {
     private $faker;
 
+    private const USERS = [
+        [
+            'username' => 'admin',
+            'name' => 'Admin',
+            'email' => 'admin@a.com'
+        ],
+        [
+            'username' => 'user2',
+            'name' => 'User #2',
+            'email' => 'user@u2.com'
+        ],
+        [
+            'username' => 'user3',
+            'name' => 'User #3',
+            'email' => 'user@u3.com'
+        ],
+        [
+            'username' => 'user4',
+            'name' => 'User #4',
+            'email' => 'user@u4.com'
+        ],
+    ];
+
     public function __construct(private UserPasswordHasherInterface $passwordHasher)
     {
         $this->faker = Factory::create();
@@ -28,12 +51,12 @@ class AppFixtures extends Fixture
 
     public function loadBlogPosts(ObjectManager $manager) :void
     {
-        $user = $this->getReference('admin_user');
         for ($i = 1; $i < 21; $i++) {
             $post = new BlogPost();
             $post->setTitle('Title # ' . $i);
             $post->setContent($this->faker->text(255));
-            $post->setAuthor($user);
+            $authorReference = $this->getRandomUserReference();
+            $post->setAuthor($authorReference);
             $post->setSlug('title-' . $i);
             //$currentDateTime = new \DateTime();
             //$postDateTime = $currentDateTime->modify('-' . mt_rand(1, 5) . ' day');
@@ -51,7 +74,8 @@ class AppFixtures extends Fixture
                 $comment = new Comment();
                 $comment->setContent($this->faker->text());
                 $comment->setPublished($this->faker->dateTimeBetween('-2 years', '+3 weeks'));
-                $comment->setAuthor($this->getReference('admin_user'));
+                $authorReference = $this->getRandomUserReference();
+                $comment->setAuthor($authorReference);
                 $comment->setBlogPost($this->getReference("blog_post_$i"));
                 $manager->persist($comment);
             }
@@ -62,18 +86,25 @@ class AppFixtures extends Fixture
 
     public function loadUsers(ObjectManager $manager) :void
     {
-        $adminUser = new User();
-        $adminUser->setName('Admin');
-        $adminUser->setUsername('admin');
-        $adminUser->setEmail('admin@a.com');
-        $hashedPassword = $this->passwordHasher->hashPassword(
-            $adminUser,
-            '123456'
-        );
-        $adminUser->setPassword($hashedPassword);
-        $this->addReference('admin_user', $adminUser);
-        $manager->persist($adminUser);
+        foreach (self::USERS as $userFixtures) {
+            $adminUser = new User();
+            $adminUser->setName($userFixtures['name']);
+            $adminUser->setUsername($userFixtures['username']);
+            $adminUser->setEmail($userFixtures['email']);
+            $hashedPassword = $this->passwordHasher->hashPassword(
+                $adminUser,
+                '123456'
+            );
+            $adminUser->setPassword($hashedPassword);
+            $this->addReference($userFixtures['username'], $adminUser);
+            $manager->persist($adminUser);
+        }
         $manager->flush();
+    }
+
+    private function getRandomUserReference(): User
+    {
+        return $this->getReference(self::USERS[rand(0, 3)]['username']);
     }
 
 }

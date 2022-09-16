@@ -6,30 +6,47 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\CommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CommentRepository::class)]
 #[ApiResource(
-    collectionOperations: ['get', 'post' => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')"]],
-    itemOperations: ['get', 'put' => ["security" =>
-        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]]
+    collectionOperations: [
+        "get",
+        "post" => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')",
+            "normalization_context" => ["groups" => ["get-comment-with-author"]]],
+        "api_blog_posts_comments_get_subresource" => ["normalization_context" =>
+            ["groups" => ["get-comment-with-author"]]]
+    ],
+    itemOperations: ["get", "put" => ["security" =>
+        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]],
+    denormalizationContext: ["groups" => ["post"]],
 )]
-class Comment
+class Comment implements AuthoredEntityInterface, PublishedDateEntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["get-comment-with-author"])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank]
+    #[Groups(["post", "get-comment-with-author"])]
     private ?string $content = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'comments')]
+    #[Groups(["get-comment-with-author"])]
     private ?User $author;
 
     #[ORM\ManyToOne(targetEntity: BlogPost::class, inversedBy: 'comments')]
+    #[Assert\NotBlank]
+    #[Groups(["post"])]
     private ?BlogPost $post;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(["get-comment-with-author"])]
     private ?\DateTimeInterface $published = null;
 
     public function getId(): ?int
@@ -54,7 +71,7 @@ class Comment
         return $this->published;
     }
 
-    public function setPublished(\DateTimeInterface $published): self
+    public function setPublished(\DateTimeInterface $published): PublishedDateEntityInterface
     {
         $this->published = $published;
 
@@ -66,18 +83,18 @@ class Comment
         return $this->author;
     }
 
-    public function setAuthor(?User $author): self
+    public function setAuthor(?UserInterface $author): AuthoredEntityInterface
     {
         $this->author = $author;
         return $this;
     }
 
-    public function getBlogPost(): ?BlogPost
+    public function getPost(): ?BlogPost
     {
         return $this->post;
     }
 
-    public function setBlogPost(?BlogPost $post): self
+    public function setPost(?BlogPost $post): self
     {
         $this->post = $post;
         return $this;
