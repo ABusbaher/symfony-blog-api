@@ -14,13 +14,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     collectionOperations: [
         "get",
-        "post" => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')",
+        "post" => ["security" => "is_granted('ROLE_COMMENTATOR')",
             "normalization_context" => ["groups" => ["get-comment-with-author"]]],
         "api_blog_posts_comments_get_subresource" => ["normalization_context" =>
             ["groups" => ["get-comment-with-author"]]]
     ],
     itemOperations: ["get", "put" => ["security" =>
-        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]],
+        "is_granted('ROLE_EDITOR') or (is_granted('ROLE_COMMENTATOR') and object.getAuthor() == user)"]],
     denormalizationContext: ["groups" => ["post"]],
 )]
 class Comment implements AuthoredEntityInterface, PublishedDateEntityInterface

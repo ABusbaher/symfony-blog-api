@@ -32,6 +32,10 @@ security:
 #        - { path: ^/api/login, roles: PUBLIC_ACCESS }
 #        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api, roles: PUBLIC_ACCESS }
+    role_hierarchy:
+        ROLE_WRITER: ROLE_COMMENTATOR
+        ROLE_ADMIN: [ROLE_WRITER, ROLE_EDITOR]
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
 
 when@test:
     security:

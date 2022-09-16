@@ -6,6 +6,7 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JetBrains\PhpStorm\Pure;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -37,6 +38,14 @@ use Symfony\Component\Validator\Constraints as Assert;
     message: "Username already in use")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    const ROLE_COMMENTATOR = 'ROLE_COMMENTATOR';
+    const ROLE_WRITER = 'ROLE_WRITER';
+    const ROLE_EDITOR = 'ROLE_EDITOR';
+    const ROLE_ADMIN = 'ROLE_ADMIN';
+    const ROLE_SUPER_ADMIN = 'ROLE_SUPER_ADMIN';
+
+    const DEFAULT_ROLES = [self::ROLE_COMMENTATOR];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -73,7 +82,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["post"])]
+    #[Groups(["post", "put", "get-admin", "get-owner"])]
     #[Assert\NotBlank]
     #[Assert\Email]
     #[Assert\Length(min: 5, max: 255)]
@@ -87,10 +96,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["get"])]
     private Collection $comments;
 
+    #[ORM\Column(type: Types::SIMPLE_ARRAY, length: 200)]
+    #[Groups(["get-admin", "get-owner"])]
+    private array $roles;
+
     #[Pure] public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->comments = new ArrayCollection();
+        $this->roles = self::DEFAULT_ROLES;
     }
 
     public function getId(): ?int
@@ -165,7 +179,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        return $this->roles;
+    }
+
+    public function setRoles(array $roles)
+    {
+        $this->roles = $roles;
     }
 
     public function eraseCredentials()

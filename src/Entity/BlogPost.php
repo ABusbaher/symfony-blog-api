@@ -18,10 +18,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     collectionOperations: [
         "get" => ["normalization_context" => ["groups" => ["get-blog-post-with-author"]]],
-        "post" => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')"]
+        "post" => ["security" => "is_granted('ROLE_WRITER')"]
     ],
     itemOperations: ["get", "put" => ["security" =>
-        "is_granted('IS_AUTHENTICATED_FULLY') and object.getAuthor() == user"]],
+        "is_granted('ROLE_EDITOR') or (is_granted('ROLE_WRITER') and object.getAuthor() == user)"]],
     denormalizationContext: ["groups" => ["post"]],
 )]
 class BlogPost implements AuthoredEntityInterface, PublishedDateEntityInterface
