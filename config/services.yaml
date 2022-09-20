@@ -22,6 +22,10 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: [ 'controller.service_arguments' ]
+
     App\Serializer\UserContextBuilder:
         decorates: 'api_platform.serializer.context_builder'
         arguments: [ '@App\Serializer\UserContextBuilder.inner' ]
@@ -30,3 +34,7 @@ services:
         arguments: [ '@security.token_storage' ]
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
+    app.token_authenticator:
+        class: App\Security\TokenAuthenticator
+        parent: lexik_jwt_authentication.security.jwt_authenticator
+
