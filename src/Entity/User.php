@@ -85,24 +85,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $retypedPassword = null;
 
     #[Groups(["put-reset-password"])]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(groups: ["put-reset-password"])]
     #[Assert\Regex(
         pattern: "/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/",
-        message: "Password must contain at least 6 characters with at least one number, one capital letter and one small letter"
+        message: "Password must contain at least 6 characters with at least one number, one capital letter and one small letter",
+        groups: ["put-reset-password"]
     )]
     private ?string $newPassword;
 
     #[Groups(["put-reset-password"])]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(groups: ["put-reset-password"])]
     #[Assert\Expression(
         "this.getNewPassword() === this.getNewRetypedPassword()",
-        message: "Passwords do not match"
+        message: "Passwords do not match",
+        groups: ["put-reset-password"]
     )]
     private ?string $newRetypedPassword;
 
     #[Groups(["put-reset-password"])]
-    #[Assert\NotBlank]
-    #[UserPassword()]
+    #[Assert\NotBlank(groups: ["put-reset-password"])]
+    #[UserPassword(groups: ["put-reset-password"])]
     private ?string $oldPassword;
 
     #[ORM\Column(length: 255)]
@@ -133,11 +135,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $passwordChangeDate = null;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private ?bool $enabled;
+
+    #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
+    private ?string $confirmationToken;
+
     #[Pure] public function __construct()
     {
         $this->posts = new ArrayCollection();
         $this->comments = new ArrayCollection();
         $this->roles = self::DEFAULT_ROLES;
+        $this->enabled = false;
+        $this->confirmationToken = null;
     }
 
     public function getId(): ?int
@@ -265,10 +275,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->getEmail();
     }
 
-    /**
-     * @return mixed
-     */
-    public function getPasswordChangeDate(): int
+    public function getPasswordChangeDate(): ?int
     {
         return $this->passwordChangeDate;
     }
@@ -276,6 +283,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPasswordChangeDate($passwordChangeDate): self
     {
         $this->passwordChangeDate = $passwordChangeDate;
+        return $this;
+    }
+
+    public function getEnabled(): ?bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(?bool $enabled): self
+    {
+        $this->enabled = $enabled;
+        return $this;
+    }
+
+    public function getConfirmationToken(): ?string
+    {
+        return $this->confirmationToken;
+    }
+
+    public function setConfirmationToken(?string $confirmationToken): self
+    {
+        $this->confirmationToken = $confirmationToken;
         return $this;
     }
 

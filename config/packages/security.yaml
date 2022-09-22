@@ -21,6 +21,7 @@ security:
                 check_path: /api/login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            user_checker: App\Security\UserEnabledChecker
 
         api:
             pattern: ^/api
@@ -28,7 +29,6 @@ security:
             jwt:
                 authenticator: app.token_authenticator
 #                    - lexik_jwt_authentication.jwt_token_authenticator
-
 
 
     # Easy way to control access for large sections of your site
