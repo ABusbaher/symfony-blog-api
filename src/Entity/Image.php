@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Controller\UploadImageAction;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -36,6 +37,7 @@ class Image
     private ?File $file = null;
 
     #[ORM\Column(type: 'string', nullable: true)]
+    #[Groups(["get-blog-post-with-author"])]
     private ?string $url = null;
 
     public function getId(): ?int

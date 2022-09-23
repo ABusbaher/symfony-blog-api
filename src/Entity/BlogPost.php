@@ -62,9 +62,15 @@ class BlogPost implements AuthoredEntityInterface, PublishedDateEntityInterface
     #[Groups(["post", "get-blog-post-with-author"])]
     private ?string $slug;
 
+    #[ORM\ManyToMany(targetEntity: Image::class)]
+    #[ApiSubresource]
+    #[Groups(["post", "get-blog-post-with-author"])]
+    private Collection $images;
+
     #[Pure] public function __construct()
     {
         $this->comments = new ArrayCollection();
+        $this->images = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -133,4 +139,27 @@ class BlogPost implements AuthoredEntityInterface, PublishedDateEntityInterface
     {
         $this->slug = $slug;
     }
+
+    public function getImages(): Collection
+    {
+        return $this->images;
+    }
+
+    public function addImage(Image $image): void
+    {
+        if ($this->images->contains($image)) {
+            return;
+        }
+        $this->images->add($image);
+    }
+
+    public function removeImage(Image $image): void
+    {
+        if (!$this->images->contains($image)) {
+            return;
+        }
+        $this->images->removeElement($image);
+    }
+
+
 }
