@@ -10,11 +10,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use App\Email\Mailer;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserRegisterSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private UserPasswordHasherInterface $passwordHasher, private TokenGenerator $tokenGenerator)
+    public function __construct(
+        private UserPasswordHasherInterface $passwordHasher,
+        private TokenGenerator $tokenGenerator,
+        private Mailer $mailer
+    )
     {
 
     }
@@ -30,13 +36,14 @@ class UserRegisterSubscriber implements EventSubscriberInterface
 
     /**
      * @throws Exception
+     * @throws TransportExceptionInterface
      */
     public function userRegistered(ViewEvent $event): void
     {
         $user = $event->getControllerResult();
         $method = $event->getRequest()->getMethod();
 
-        if(!$user instanceof User || $method != Request::METHOD_POST){
+        if (!$user instanceof User || $method != Request::METHOD_POST) {
             return;
         }
         // Hash a password
@@ -45,6 +52,7 @@ class UserRegisterSubscriber implements EventSubscriberInterface
         );
         // Create confirmation token
         $user->setConfirmationToken($this->tokenGenerator->getRandomSecureToken());
-
+        //Send email
+        $this->mailer->sendConfirmationEmail($user);
     }
 }
