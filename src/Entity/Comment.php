@@ -21,6 +21,11 @@ use Symfony\Component\Validator\Constraints as Assert;
     ],
     itemOperations: ["get", "put" => ["security" =>
         "is_granted('ROLE_EDITOR') or (is_granted('ROLE_COMMENTATOR') and object.getAuthor() == user)"]],
+    attributes: [
+        "order" => [
+            "published" => "desc",
+        ]
+    ],
     denormalizationContext: ["groups" => ["post"]],
 )]
 class Comment implements AuthoredEntityInterface, PublishedDateEntityInterface

@@ -23,7 +23,12 @@ use Symfony\Component\Validator\Constraints as Assert;
                 "_api_receive" => false,
             ]
         ]
-    ]
+    ],
+    attributes: [
+        "order" => [
+            "id" => "desc",
+        ]
+    ],
 )]
 class Image
 {

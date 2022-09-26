@@ -4,6 +4,10 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiSubresource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use App\Repository\BlogPostRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -13,8 +17,27 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use JetBrains\PhpStorm\Pure;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 #[ORM\Entity(repositoryClass: BlogPostRepository::class)]
+#[ApiFilter(SearchFilter::class, properties: [
+    "title" => "ipartial", //case sensitive
+    "content" => "partial",
+    "author" => "exact",
+    "author.name"=> "partial"
+])]
+#[ApiFilter(DateFilter::class, properties: ["published"])]
+#[ApiFilter(RangeFilter::class, properties: ["id"])]
+#[ApiFilter(OrderFilter::class,
+    properties: ["id", "published", "title"],
+    arguments: ["orderParameterName" => "order"]
+)]
+#[ApiFilter(PropertyFilter::class, arguments: [
+    "parameterName" => "properties",
+    "overrideDefaultProperties" => false,
+    "whitelist" => ["id", "author", "slug", "title", "content"]
+])]
 #[ApiResource(
     collectionOperations: [
         "get" => ["normalization_context" => ["groups" => ["get-blog-post-with-author"]]],
@@ -24,6 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         "is_granted('ROLE_EDITOR') or (is_granted('ROLE_WRITER') and object.getAuthor() == user)"]],
     denormalizationContext: ["groups" => ["post"]],
 )]
+
 class BlogPost implements AuthoredEntityInterface, PublishedDateEntityInterface
 {
     #[ORM\Id]
