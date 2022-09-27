@@ -38,3 +38,7 @@ services:
         class: App\Security\TokenAuthenticator
         parent: lexik_jwt_authentication.security.jwt_authenticator
 
+    App\Security\UserConfirmationService:
+        arguments:
+            $logger: '@monolog.logger.token_confirmation'
+

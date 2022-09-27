@@ -20,8 +20,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ApiResource(
     collectionOperations:
-        ["post" => ["denormalization_context" => ["groups" => ["post"]]]
-    ],
+        ["post" =>
+            [
+                "denormalization_context" => ["groups" => ["post"]],
+                "normalization_context" => ["groups" => ["get"]],
+                "validation_groups" => ["post"]
+            ]
+        ],
     itemOperations: [
         "get" => ["security" => "is_granted('IS_AUTHENTICATED_FULLY')",
             "normalization_context" => ['groups' => ['get']]
@@ -34,7 +39,8 @@ use Symfony\Component\Validator\Constraints as Assert;
             "denormalization_context" => ["groups" => ["put-reset-password"]],
             "method" => "PUT",
             "path" => "/users/{id}/reset-password",
-            "controller" => ResetPasswordAction::class
+            "controller" => ResetPasswordAction::class,
+            "validation_groups" => ["put-reset-password"]
         ],
     ],
 //    denormalizationContext: ['groups' => ['put']],

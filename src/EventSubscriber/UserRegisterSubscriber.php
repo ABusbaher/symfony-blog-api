@@ -43,9 +43,10 @@ class UserRegisterSubscriber implements EventSubscriberInterface
         $user = $event->getControllerResult();
         $method = $event->getRequest()->getMethod();
 
-        if (!$user instanceof User || $method != Request::METHOD_POST) {
+        if (!$user instanceof User || $method != Request::METHOD_POST || !$user->getPassword()) {
             return;
         }
+
         // Hash a password
         $user->setPassword(
             $this->passwordHasher->hashPassword($user, $user->getPassword())
